@@ -1,0 +1,810 @@
+<html>
+<head>
+  <title>Geometry Dash</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    @font-face {
+      font-family: 'Pusab';
+      src: url('/Pusab.ttf') format('truetype');
+    }
+    
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Pusab', sans-serif;
+    }
+    #gameCanvas {
+      display: block;
+      touch-action: none;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    #menu {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #1a237e, #4a148c);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    #menu.hidden {
+      display: none;
+    }
+
+    .menu-ground {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(0, 0, 0, 0.5);
+      border-top: 2px solid rgba(255, 255, 255, 0.3);
+      z-index: 1;
+    }
+
+    .menu-character {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      bottom: 60px; 
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 0;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    #menu img.logo {
+      width: 90%;
+      max-width: 800px;
+      margin-bottom: 80px;
+      margin-top: -100px;
+      filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
+      position: relative;
+      z-index: 2;
+    }
+
+    #playButton {
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      padding: 0;
+      width: 180px;
+      height: 180px;
+      position: relative;
+    }
+
+    #playButton img {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.5));
+    }
+
+    #playButton:hover {
+      transform: scale(1.1);
+    }
+
+    .menu-version {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      color: rgba(255, 255, 255, 0.5);
+      font-family: 'Pusab', sans-serif;
+      font-size: 14px;
+    }
+
+    .menu-grid {
+      display: none;
+    }
+    #menuButton {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid white;
+      color: white;
+      padding: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Pusab', sans-serif;
+      font-size: 12px;
+      z-index: 99;
+    }
+
+    #menuButton:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .button-container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    #iconButton {
+      position: absolute;
+      left: -200px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      padding: 0;
+      width: 150px;
+      height: 150px;
+    }
+
+    #iconButton img {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
+    }
+
+    #iconButton:hover {
+      transform: scale(1.1);
+    }
+    
+    #iconModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.95);
+      border: 4px solid #2C9E3F;
+      border-radius: 15px;
+      padding: 25px;
+      z-index: 200;
+      width: 90%;
+      height: 90vh;
+      box-shadow: 0 0 20px rgba(44, 158, 63, 0.5);
+      overflow-y: auto;
+    }
+
+    .exit-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 0, 0, 0.5);
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Pusab', sans-serif;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+
+    .exit-button:hover {
+      background: rgba(255, 0, 0, 0.8);
+      transform: scale(1.1);
+    }
+
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+      gap: 15px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      border: 2px solid rgba(44, 158, 63, 0.3);
+      margin-top: 20px;
+    }
+
+    .icon-option {
+      width: 60px;
+      height: 60px;
+      margin: auto;
+    }
+
+    .icon-option:hover {
+      transform: scale(1.1);
+      border-color: #2C9E3F;
+      box-shadow: 0 0 10px rgba(44, 158, 63, 0.5);
+      background: rgba(44, 158, 63, 0.2);
+    }
+
+    .icon-option.selected {
+      border-color: #2C9E3F;
+      box-shadow: 0 0 15px rgba(44, 158, 63, 0.8);
+      background: rgba(44, 158, 63, 0.3);
+    }
+
+    .trails-section {
+      margin-top: 35px;
+      padding: 20px;
+      border-top: 2px solid rgba(44, 158, 63, 0.3);
+    }
+
+    .trails-section h3 {
+      color: #2C9E3F;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 28px;
+      text-shadow: 0 0 10px rgba(44, 158, 63, 0.5);
+    }
+
+    .trail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .trail-option {
+      background: rgba(44, 158, 63, 0.1);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Pusab', sans-serif;
+      font-size: 18px;
+      border: 2px solid rgba(44, 158, 63, 0.3);
+    }
+
+    .trail-option:hover {
+      background: rgba(44, 158, 63, 0.2);
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(44, 158, 63, 0.3);
+    }
+
+    .trail-option.selected {
+      background: rgba(44, 158, 63, 0.3);
+      box-shadow: 0 0 15px rgba(44, 158, 63, 0.5);
+      border-color: #2C9E3F;
+    }
+
+    #chatContainer {
+      position: relative;
+      z-index: 2;
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      background: rgba(0,0,0,0.8);
+      border: 2px solid rgba(0, 255, 255, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      width: 300px;
+      height: 400px;
+      color: white;
+      font-family: 'Pusab', sans-serif;
+      display: none;
+      z-index: 98;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    }
+
+    #chatButton {
+      position: relative;
+      z-index: 2;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid rgba(0, 255, 255, 0.5); 
+      border-radius: 5px;
+      color: white;
+      padding: 10px 30px;
+      cursor: pointer;
+      font-family: 'Pusab', sans-serif;
+      font-size: 18px;
+      transition: all 0.3s;
+      z-index: 99;
+      text-shadow: 0 0 10px cyan;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    }
+
+    #chatButton:hover {
+      background: rgba(0, 255, 255, 0.2);
+      transform: scale(1.05);
+      border-color: rgba(0, 255, 255, 0.8);
+      text-shadow: 0 0 15px cyan;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+
+    #chatMessages {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding: 10px;
+    }
+
+    .chat-message {
+      margin-bottom: 10px;
+      word-wrap: break-word;
+    }
+
+    .chat-username {
+      color: cyan;
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    #chatInput {
+      display: flex;
+      gap: 5px;
+    }
+
+    #messageInput {
+      flex-grow: 1;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 5px;
+      color: white;
+      padding: 8px;
+      font-family: 'Pusab', sans-serif;
+      font-size: 12px;
+    }
+
+    #sendButton {
+      background: rgba(0,255,255,0.3);
+      border: none;
+      border-radius: 5px;
+      color: white;
+      padding: 8px 15px;
+      cursor: pointer;
+      font-family: 'Pusab', sans-serif;
+      transition: all 0.3s;
+    }
+
+    #sendButton:hover {
+      background: rgba(0,255,255,0.5);
+    }
+
+    #updateLog, #updateLogButton {
+      display: none;
+    }
+
+    #levelMaker {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #1a1a1a, #000000);
+      z-index: 1000;
+    }
+
+    .level-maker-toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      gap: 10px;
+      z-index: 1001;
+      border-bottom: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .tool-button {
+      background: rgba(0,255,0,0.2);
+      border: 2px solid rgba(0,255,0,0.5);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Pusab', sans-serif;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .tool-button:hover {
+      background: rgba(0,255,0,0.4);
+      transform: scale(1.05);
+    }
+
+    .tool-button.selected {
+      background: rgba(0,255,0,0.6);
+      box-shadow: 0 0 10px rgba(0,255,0,0.4);
+    }
+
+    #levelMakerGrid {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      background: linear-gradient(45deg, #1a237e, #4a148c);
+    }
+
+    .grid-cell {
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+      position: absolute;
+      transition: background-color 0.2s;
+      box-sizing: border-box;
+    }
+
+    .grid-cell:hover {
+      background-color: rgba(255,255,255,0.2);
+    }
+
+    .grid-cell.spike {
+      background: linear-gradient(to bottom, #000000 0%, rgba(0, 0, 0, 0) 100%);
+      border: 2px solid #FFFFFF;
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+
+    .grid-cell.block {
+      background: linear-gradient(to bottom, #000000 0%, rgba(0, 0, 0, 0) 100%);
+      border: 2px solid #FFFFFF;
+    }
+    #creatorMenu, .creator-menu-content, .creator-menu-button, .creator-view,
+    .view-content, .stats-grid, .stat-item, .stat-label, .stat-value,
+    .about-content, .player-list {
+      display: none;
+    }
+
+    #levelMakerButton {
+      position: absolute;
+      right: -200px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      padding: 0;
+      width: 150px;
+      height: 150px;
+    }
+
+    #levelMakerButton img {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
+    }
+
+    #levelMakerButton:hover {
+      transform: scale(1.1);
+    }
+
+    #settingsButton {
+      position: fixed; 
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid rgba(0, 255, 255, 0.5);
+      border-radius: 5px;
+      color: white;
+      padding: 10px 30px;
+      cursor: pointer;
+      font-family: 'Pusab', sans-serif;
+      font-size: 18px;
+      transition: all 0.3s;
+      z-index: 99;
+      text-shadow: 0 0 10px cyan;
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    }
+
+    #settingsButton:hover {
+      background: rgba(0, 255, 255, 0.2);
+      transform: scale(1.05);
+      border-color: rgba(0, 255, 255, 0.8);
+      text-shadow: 0 0 15px cyan;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+
+    #settingsModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(45deg, #1a1a1a, #000000);
+      border: 4px solid #2C9E3F;
+      border-radius: 15px;
+      padding: 25px;
+      z-index: 200;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 20px rgba(44, 158, 63, 0.5);
+    }
+
+    .settings-title {
+      color: #2C9E3F;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 32px;
+      font-family: 'Pusab', sans-serif;
+      text-shadow: 0 0 10px rgba(44, 158, 63, 0.5);
+      padding: 10px;
+      border-bottom: 2px solid rgba(44, 158, 63, 0.3);
+    }
+
+    .settings-section {
+      margin-bottom: 20px;
+      padding: 20px;
+      background: rgba(44, 158, 63, 0.1);
+      border-radius: 10px;
+      border: 2px solid rgba(44, 158, 63, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .settings-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent, rgba(44, 158, 63, 0.1));
+      pointer-events: none;
+    }
+
+    .settings-section h3 {
+      color: #2C9E3F;
+      margin-bottom: 20px;
+      font-family: 'Pusab', sans-serif;
+      font-size: 24px;
+      text-shadow: 0 0 5px rgba(44, 158, 63, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .settings-section h3::before {
+      content: '';
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+
+    .settings-section.sound h3::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232C9E3F'%3E%3Cpath d='M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z'/%3E%3C/svg%3E");
+    }
+
+    .settings-section.graphics h3::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232C9E3F'%3E%3Cpath d='M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z'/%3E%3C/svg%3E");
+    }
+
+    .settings-option {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      color: white;
+      font-family: 'Pusab', sans-serif;
+      font-size: 16px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      border: 1px solid rgba(44, 158, 63, 0.2);
+    }
+
+    .settings-option:hover {
+      background: rgba(44, 158, 63, 0.15);
+    }
+
+    .settings-option label {
+      flex: 1;
+      text-shadow: 0 0 5px rgba(44, 158, 63, 0.5);
+    }
+
+    .settings-option input[type="range"] {
+      flex: 1;
+      margin-left: 15px;
+      height: 8px;
+      -webkit-appearance: none;
+      background: rgba(44, 158, 63, 0.3);
+      border-radius: 4px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .settings-option input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #2C9E3F;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(44, 158, 63, 0.5);
+      transition: all 0.2s;
+    }
+
+    .settings-option input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(44, 158, 63, 0.7);
+    }
+
+    .settings-option input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      margin-left: 15px;
+      -webkit-appearance: none;
+      background: rgba(44, 158, 63, 0.3);
+      border: 2px solid #2C9E3F;
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .settings-option input[type="checkbox"]:checked {
+      background: #2C9E3F;
+    }
+
+    .settings-option input[type="checkbox"]:checked::before {
+      content: '✓';
+      position: absolute;
+      color: white;
+      font-size: 18px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .settings-option input[type="checkbox"]:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(44, 158, 63, 0.5);
+    }
+
+    .exit-button {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(255, 0, 0, 0.3);
+      border: 2px solid rgba(255, 0, 0, 0.5);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'Pusab', sans-serif;
+      font-size: 16px;
+      transition: all 0.2s;
+      text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+    }
+
+    .exit-button:hover {
+      background: rgba(255, 0, 0, 0.5);
+      transform: scale(1.1);
+      box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+    }
+  </style>
+
+  <style>
+    #playButton, #iconButton {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .icon-option, .color-option {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    #iconModal {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: pan-y pinch-zoom;
+    }
+  </style>
+</head>
+<body>
+  <div id="menu">
+    <div class="menu-ground"></div>
+    <img id="menuCharacter" class="menu-character" src="/Hes a chill guy.png" alt="Character">
+    <img src="/logo - Geodashers.png" alt="Geodashers Logo" class="logo">
+    <button id="settingsButton">SETTINGS</button>
+    <div class="button-container">
+      <button id="playButton">
+        <img src="/GJ_playBtn_001.png" alt="Play">
+      </button>
+      <button id="iconButton">
+        <img src="/GJ_garageBtn_001.png" alt="Change Icon">
+      </button>
+      <button id="levelMakerButton">
+        <img src="/GJ_creatorBtn_001.png" alt="Level Maker">
+      </button>
+    </div>
+    <div class="menu-version">v1.7</div>
+  </div>
+
+  <div id="iconModal">
+    <button id="iconModalExit" class="exit-button">X</button>
+    <div class="icon-grid">
+      <img src="/Cube002.png" class="icon-option" data-icon="/Cube002.png">
+      <img src="/Colon Robot.png" class="icon-option" data-icon="/Colon Robot.png">
+      <img src="/Nexus Cube.png" class="icon-option" data-icon="/Nexus Cube.png">
+      <img src="/cube_4.png" class="icon-option" data-icon="/cube_4.png">
+      <img src="/RobTop Cube.png" class="icon-option" data-icon="/RobTop Cube.png">
+      <img src="/cube_42.png" class="icon-option" data-icon="/cube_42.png">
+      <img src="/Cube001.png" class="icon-option" data-icon="/Cube001.png">
+      <img src="/Cube003.png" class="icon-option" data-icon="/Cube003.png">
+      <img src="/cube_37.png" class="icon-option" data-icon="/cube_37.png">
+      <img src="/Cube004.png" class="icon-option" data-icon="/Cube004.png">
+      <img src="/Split72 Cube.png" class="icon-option" data-icon="/Split72 Cube.png">
+      <img src="/Subwoofer Cube.png" class="icon-option" data-icon="/Subwoofer Cube.png">
+      <img src="/Colon Cube.png" class="icon-option" data-icon="/Colon Cube.png">
+      <img src="/AudieoVisual Cube.png" class="icon-option" data-icon="/AudieoVisual Cube.png">
+      <img src="/cube_60 (1).png" class="icon-option" data-icon="/cube_60 (1).png">
+      <img src="/cube_162.png" class="icon-option" data-icon="/cube_162.png">
+      <img src="/cube_161.png" class="icon-option" data-icon="/cube_161.png">
+      <img src="/cube_11.png" class="icon-option" data-icon="/cube_11.png">
+      <img src="/cube_3.png" class="icon-option" data-icon="/cube_3.png">
+      <img src="/cube_60.png" class="icon-option" data-icon="/cube_60.png">
+    </div>
+    <div class="trails-section">
+      <h3>Trails</h3>
+      <div class="trail-grid">
+        <div class="trail-option selected" data-trail="default">Default</div>
+        <div class="trail-option" data-trail="fire">Fire</div>
+        <div class="trail-option" data-trail="rainbow">Rainbow</div>
+        <div class="trail-option" data-trail="star">Stars</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="levelMaker">
+    <div class="level-maker-toolbar">
+      <button class="tool-button" data-tool="cursor">Cursor</button>
+      <button class="tool-button" data-tool="spike">Spike</button>
+      <button class="tool-button" data-tool="block">Block</button>
+      <button class="tool-button" data-tool="eraser">Eraser</button>
+      <button class="tool-button save-level">Save Level</button>
+      <button class="tool-button" onclick="document.getElementById('levelMaker').style.display='none'">Exit</button>
+    </div>
+    <div id="levelMakerGrid"></div>
+  </div>
+
+  <div id="settingsModal">
+    <button id="settingsModalExit" class="exit-button">X</button>
+    <h2 class="settings-title">SETTINGS</h2>
+    
+    <div class="settings-section sound">
+      <h3>Sound</h3>
+      <div class="settings-option">
+        <label>Music Volume</label>
+        <input type="range" id="musicVolume" min="0" max="100" value="80">
+      </div>
+      <div class="settings-option">
+        <label>SFX Volume</label>
+        <input type="range" id="sfxVolume" min="0" max="100" value="50">
+      </div>
+    </div>
+
+    <div class="settings-section graphics">
+      <h3>Graphics</h3>
+      <div class="settings-option">
+        <label>Show Hitboxes</label>
+        <input type="checkbox" id="showHitboxes">
+      </div>
+    </div>
+  </div>
+
+  <button id="menuButton">MENU</button>
+  <canvas id="gameCanvas"></canvas>
+  <audio id="menuMusic" src="/menuLoop.mp3" loop></audio>
+  <script src="js/menu.js" type="module"></script>
+  <script src="js/game.js" type="module"></script>
+</body>
+</html>
